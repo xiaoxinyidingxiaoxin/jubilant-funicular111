@@ -125,7 +125,6 @@
         .series-badge{display:inline-block;padding:2px 12px;border-radius:12px;font-size:11px;font-weight:bold;margin-right:6px;}
         .badge-poyun{background:#dbeafe;color:#0047AB;}
         .badge-tunhai{background:#ede9fe;color:#7E22CE;}
-        /* 线索总览模块样式 */
         .clue-overview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-top:12px;}
         .clue-overview-card{background:#f8fafc;border:1px solid var(--police-border);border-radius:6px;padding:16px;}
         .clue-overview-card .case-name{font-weight:bold;color:var(--police-blue);font-size:15px;margin-bottom:8px;}
@@ -196,7 +195,6 @@
         <div class="sidebar-module"><div class="sidebar-title">系统管理</div>
             <button class="sidebar-btn" onclick="refreshLocalSave()">🔄 同步存档</button>
             <button class="sidebar-btn" style="color:var(--police-red);" onclick="clearAllSave()">🗑️ 重置进度</button></div>
-        <!-- 新增：案件线索总览模块 -->
         <div class="sidebar-module"><div class="sidebar-title">线索总览</div>
             <button class="sidebar-btn" data-mod="overview" onclick="switchModule('overview')">📖 案件线索总览</button></div>
     </aside>
@@ -248,7 +246,6 @@
             <div id="reportEmpty" style="color:var(--police-gray);text-align:center;padding:40px 0;">完成问答后生成报告</div>
             <div class="conclusion-box" id="finalReport"></div>
         </div></div>
-        <!-- 新增：案件线索总览模块 -->
         <div id="mod-overview" class="module"><div class="work-card"><div class="card-title">📖 案件线索总览 <span style="font-size:13px;color:var(--police-gray);font-weight:normal;">— 所有案件完整线索清单</span></div>
             <div class="jump-bar"><button class="jump-btn" onclick="switchModule('archive')">→ 卷宗</button><button class="jump-btn" onclick="switchModule('search')">→ 搜索</button></div>
             <div style="margin-bottom:12px;color:var(--police-gray);font-size:13px;">💡 以下是所有案件中可搜索的物证、人物和地点线索，以及结案问答正确答案。</div>
@@ -315,8 +312,8 @@ var caseDB = {
         id: 0, series: "破云", title: "建宁502冷库剧毒冻尸案", tag: "tag-poyun", tagName: "破云·入门",
         desc: "破云开篇案件，不夜宫KTV后厨冷库惊现冻尸",
         initialInfo: {
-            deathScene: "建宁市**不夜宫KTV·后厨冷库/冰柜**。",
-            bodyCondition: "死者冯宇光，年轻男性，体内检出过量东莨菪碱与MDMA混合物，系毒品致幻后自行钻入冰柜冻死。**在死者周围发现一枚链头，经查为某奢侈品包上的金属配件。**",
+            deathScene: "建宁市不夜宫KTV·后厨冷库/冰柜。",
+            bodyCondition: "死者冯宇光，年轻男性，体内检出过量东莨菪碱与MDMA混合物，系毒品致幻后自行钻入冰柜冻死。在死者周围发现一枚链头，经查为某奢侈品包上的金属配件。",
             keyFacts: "1.冯宇光从丁当处购买仿制蓝金失败品；2.丁当因喜欢楚慈而蓄意杀害冯宇光；3.不夜宫老板杨媚是江停的线人；4.胡伟胜对花生严重过敏。"
         },
         evd: [
@@ -450,7 +447,7 @@ var caseDB = {
         ],
         places: [
             {id:"l4", name:"恭州城郊废弃化工厂", desc:"爆炸发生地"},
-            {id:"l5", name:"瑶山工厂", desc:"S省瑶山地下制毒基地（原著为瑶山，非岚山）"}
+            {id:"l5", name:"瑶山工厂", desc:"S省瑶山地下制毒基地"}
         ],
         dialogueResponses: {
             "p10": {"e26":"（神色平静）红心Q...是吴吞给我的。他以为我是他的人，但我想端掉整个组织。","e31":"（靠在椅背上）我不是什么失踪卧底。我是主动打进去的。草花A需要一个'红心Q'，而我需要他的信任。"},
@@ -659,7 +656,7 @@ function renderSearch() {
     }
     var c = getCase(cid);
     var found = saveData.foundClues || [];
-    var total = c.evd ? c.evd.length + c.persons.length + c.places.length : 0;
+    var total = (c.evd ? c.evd.length : 0) + (c.persons ? c.persons.length : 0) + (c.places ? c.places.length : 0);
     var seriesLabel = c.series || '';
     title.textContent = '— ['+seriesLabel+'] '+c.title+' | 已发现 '+found.length+'/'+total+' 条线索';
     if(c.initialInfo) {
@@ -683,31 +680,37 @@ function performSearch() {
     var html = '';
     var matchedItems = [];
     if(type === 'all' || type === 'evd') {
-        c.evd.forEach(function(e){
-            if(e.name.indexOf(input) !== -1 || input.indexOf(e.name) !== -1 || e.desc.indexOf(input) !== -1) {
-                found = true;
-                var alreadyFound = (saveData.foundClues || []).indexOf('e'+e.id) !== -1;
-                matchedItems.push({ type:'evd', id:'e'+e.id, name:e.name, desc:e.desc, detail:e.detail, alreadyFound:alreadyFound });
-            }
-        });
+        if(c.evd) {
+            c.evd.forEach(function(e){
+                if(e.name.indexOf(input) !== -1 || input.indexOf(e.name) !== -1 || e.desc.indexOf(input) !== -1) {
+                    found = true;
+                    var alreadyFound = (saveData.foundClues || []).indexOf('e'+e.id) !== -1;
+                    matchedItems.push({ type:'evd', id:'e'+e.id, name:e.name, desc:e.desc, detail:e.detail, alreadyFound:alreadyFound });
+                }
+            });
+        }
     }
     if(type === 'all' || type === 'person') {
-        c.persons.forEach(function(p){
-            if(p.name.indexOf(input) !== -1 || input.indexOf(p.name) !== -1 || p.role.indexOf(input) !== -1) {
-                found = true;
-                var alreadyFound = (saveData.foundClues || []).indexOf('p'+p.id) !== -1;
-                matchedItems.push({ type:'person', id:'p'+p.id, name:p.name, role:p.role, desc:p.desc, alreadyFound:alreadyFound });
-            }
-        });
+        if(c.persons) {
+            c.persons.forEach(function(p){
+                if(p.name.indexOf(input) !== -1 || input.indexOf(p.name) !== -1 || p.role.indexOf(input) !== -1) {
+                    found = true;
+                    var alreadyFound = (saveData.foundClues || []).indexOf('p'+p.id) !== -1;
+                    matchedItems.push({ type:'person', id:'p'+p.id, name:p.name, role:p.role, desc:p.desc, alreadyFound:alreadyFound });
+                }
+            });
+        }
     }
     if(type === 'all' || type === 'place') {
-        c.places.forEach(function(l){
-            if(l.name.indexOf(input) !== -1 || input.indexOf(l.name) !== -1) {
-                found = true;
-                var alreadyFound = (saveData.foundClues || []).indexOf('l'+l.id) !== -1;
-                matchedItems.push({ type:'place', id:'l'+l.id, name:l.name, desc:l.desc, alreadyFound:alreadyFound });
-            }
-        });
+        if(c.places) {
+            c.places.forEach(function(l){
+                if(l.name.indexOf(input) !== -1 || input.indexOf(l.name) !== -1) {
+                    found = true;
+                    var alreadyFound = (saveData.foundClues || []).indexOf('l'+l.id) !== -1;
+                    matchedItems.push({ type:'place', id:'l'+l.id, name:l.name, desc:l.desc, alreadyFound:alreadyFound });
+                }
+            });
+        }
     }
     if(matchedItems.length > 0) {
         matchedItems.forEach(function(item){
@@ -739,13 +742,14 @@ function addClue(id) {
     renderSearch();
     renderClues();
     renderDialogue();
+    renderQuiz();
     var cid = saveData.currentCase;
     if(cid !== -1) {
         var c = getCase(cid);
-        var total = c.evd ? c.evd.length + c.persons.length + c.places.length : 0;
+        var total = (c.evd ? c.evd.length : 0) + (c.persons ? c.persons.length : 0) + (c.places ? c.places.length : 0);
         if(saveData.foundClues.length >= total && total > 0) {
             setTimeout(function(){
-                alert('🎉 所有线索已收集完毕！请前往「讯问对话」与涉案人员对质，然后进入「结案问答」。');
+                alert('🎉 所有线索已收集完毕！请前往「结案问答」完成推理。');
             }, 300);
         }
     }
@@ -760,16 +764,17 @@ function renderClues() {
     var progressText = document.getElementById('clueProgressText');
     if(cid === -1 || cid === undefined) {
         empty.style.display = 'block'; list.innerHTML = ''; count.textContent = '';
-        progressFill.style.width = '0%'; progressText.textContent = '0 / 0 线索已发现';
+        if(progressFill) progressFill.style.width = '0%';
+        if(progressText) progressText.textContent = '0 / 0 线索已发现';
         return;
     }
     var c = getCase(cid);
     var found = saveData.foundClues || [];
-    var total = c.evd ? c.evd.length + c.persons.length + c.places.length : 0;
+    var total = (c.evd ? c.evd.length : 0) + (c.persons ? c.persons.length : 0) + (c.places ? c.places.length : 0);
     count.textContent = '('+found.length+'/'+total+')';
     var pct = total > 0 ? (found.length/total)*100 : 0;
-    progressFill.style.width = pct + '%';
-    progressText.textContent = found.length + ' / ' + total + ' 线索已发现';
+    if(progressFill) progressFill.style.width = pct + '%';
+    if(progressText) progressText.textContent = found.length + ' / ' + total + ' 线索已发现';
     if(found.length === 0) {
         empty.style.display = 'block'; list.innerHTML = ''; return;
     }
@@ -788,6 +793,7 @@ function renderClues() {
     list.innerHTML = html;
 }
 
+// ========== 讯问对话函数 ==========
 function renderDialogue() {
     var cid = saveData.currentCase;
     var empty = document.getElementById('dialogueEmpty');
@@ -807,7 +813,7 @@ function renderDialogue() {
     var c = getCase(cid);
     var found = saveData.foundClues || [];
     title.textContent = '— ' + c.title;
-    var unlockedPersons = c.persons.filter(function(p){ return found.indexOf('p'+p.id) !== -1; });
+    var unlockedPersons = c.persons ? c.persons.filter(function(p){ return found.indexOf('p'+p.id) !== -1; }) : [];
     if(unlockedPersons.length === 0) {
         empty.style.display = 'block';
         personSelect.innerHTML = '<div style="color:var(--police-gray);">请先搜索并记录人物线索</div>';
@@ -860,15 +866,6 @@ function renderDialogue() {
             }
         });
         evdSelect.innerHTML = options;
-        var allEvds = found.filter(function(id){ return id[0] === 'e'; });
-        var usedEvds = history.filter(function(msg){ return msg.evdRef; }).map(function(msg){
-            var e = c.evd.find(function(ev){ return ev.name === msg.evdRef; });
-            return e ? 'e'+e.id : null;
-        }).filter(function(id){ return id !== null; });
-        var allUsed = allEvds.every(function(id){ return usedEvds.indexOf(id) !== -1; });
-        if(allUsed && allEvds.length > 0) {
-            hint.textContent = '✅ 所有物证已出示！可重复出示查看对话，完成后请前往「结案问答」。';
-        }
     } else {
         container.style.display = 'none';
         inputArea.style.display = 'none';
@@ -882,58 +879,112 @@ function selectDialoguePerson(personId) {
 
 function sendDialogue() {
     var cid = saveData.currentCase;
-    if(cid === -1) { alert('请先打开卷宗'); return; }
+    if(cid === -1 || cid === undefined) {
+        alert('请先打开卷宗');
+        return;
+    }
     var c = getCase(cid);
     var evdSelect = document.getElementById('dialogueEvdSelect');
     var evdId = evdSelect.value;
-    if(!evdId) { alert('请选择物证'); return; }
-    var person = c.persons.find(function(p){ return p.id === currentDialoguePerson; });
-    if(!person) { alert('请选择对话对象'); return; }
-    var evd = c.evd.find(function(e){ return 'e'+e.id === evdId; });
-    if(!evd) { alert('物证不存在'); return; }
-    var recordKey = cid + '_' + currentDialoguePerson;
+    if(!evdId) {
+        alert('请选择物证');
+        return;
+    }
+    var personId = currentDialoguePerson;
+    if(!personId) {
+        alert('请选择对话对象');
+        return;
+    }
+    var person = c.persons ? c.persons.find(function(p) { return p.id === personId; }) : null;
+    if(!person) {
+        alert('对话对象不存在，请重新选择');
+        return;
+    }
+    var evd = c.evd ? c.evd.find(function(e) { return 'e' + e.id === evdId; }) : null;
+    if(!evd) {
+        alert('物证不存在');
+        return;
+    }
+    var recordKey = cid + '_' + personId;
     if(!saveData.dialogueRecords) saveData.dialogueRecords = {};
     if(!saveData.dialogueRecords[recordKey]) saveData.dialogueRecords[recordKey] = [];
     var responses = c.dialogueResponses || {};
-    var personResponses = responses[currentDialoguePerson] || {};
-    var reply = personResponses[evdId] || c.defaultResponse || '（对方沉默）';
-    saveData.dialogueRecords[recordKey].push({ speaker: 'player', text: '我出示了「'+evd.name+'」', evdRef: evd.name });
-    saveData.dialogueRecords[recordKey].push({ speaker: 'npc', text: reply, evdRef: null });
+    var personResponses = responses[personId] || {};
+    var reply = personResponses[evdId];
+    if(!reply) {
+        for(var key in personResponses) {
+            if(key === evdId || key === evd.name || key.indexOf(evdId) !== -1) {
+                reply = personResponses[key];
+                break;
+            }
+        }
+    }
+    if(!reply) {
+        reply = c.defaultResponse || '（对方沉默不语，似乎在回避问题）';
+    }
+    saveData.dialogueRecords[recordKey].push({ 
+        speaker: 'player', 
+        text: '我出示了「' + evd.name + '」', 
+        evdRef: evd.name 
+    });
+    saveData.dialogueRecords[recordKey].push({ 
+        speaker: 'npc', 
+        text: reply, 
+        evdRef: null 
+    });
     saveProgress();
     renderDialogue();
 }
 
+// ========== 结案问答 - 集齐所有线索后解锁 ==========
 function renderQuiz() {
     var cid = saveData.currentCase;
     var empty = document.getElementById('quizEmpty');
     var content = document.getElementById('quizContent');
     var title = document.getElementById('quizTitle');
     var submitBtn = document.getElementById('submitQuizBtn');
+    
     if(cid === -1 || cid === undefined) {
-        empty.style.display = 'block'; content.innerHTML = ''; title.textContent = ''; submitBtn.style.display = 'none';
+        empty.style.display = 'block'; 
+        content.innerHTML = ''; 
+        title.textContent = ''; 
+        submitBtn.style.display = 'none';
         return;
     }
+    
     var c = getCase(cid);
     var found = saveData.foundClues || [];
-    var total = c.evd ? c.evd.length : 0;
-    title.textContent = '— '+c.title;
-    var person = c.persons.find(function(p){ return found.indexOf('p'+p.id) !== -1; });
-    var recordKey = person ? cid + '_' + person.id : '';
-    var history = saveData.dialogueRecords[recordKey] || [];
-    var usedEvds = history.filter(function(msg){ return msg.evdRef; }).map(function(msg){ return msg.evdRef; });
-    var allEvdNames = c.evd.map(function(e){ return e.name; });
-    var allUsed = allEvdNames.every(function(name){ return usedEvds.indexOf(name) !== -1; });
-    if(found.length === 0 || !allUsed) {
+    var totalClues = (c.evd ? c.evd.length : 0) + (c.persons ? c.persons.length : 0) + (c.places ? c.places.length : 0);
+    var hasAllClues = found.length >= totalClues && totalClues > 0;
+    
+    if(saveData.clear.indexOf(cid) !== -1) {
         empty.style.display = 'block';
+        empty.innerHTML = '✅ 该案件已办结归档';
+        empty.style.color = 'var(--police-green)';
+        content.innerHTML = '';
+        submitBtn.style.display = 'none';
+        title.textContent = '— '+c.title+' ✅ 已办结';
+        return;
+    }
+    
+    title.textContent = '— '+c.title + ' (' + found.length + '/' + totalClues + ' 线索)';
+    
+    if(!hasAllClues) {
+        empty.style.display = 'block';
+        empty.innerHTML = '🔍 需要集齐全部 ' + totalClues + ' 条线索才能解锁结案问答\n当前已收集 ' + found.length + ' 条线索';
+        empty.style.color = 'var(--police-gray)';
         content.innerHTML = '';
         submitBtn.style.display = 'none';
         return;
     }
+    
     empty.style.display = 'none';
     submitBtn.style.display = 'block';
+    
     if(!saveData.quizAnswers) saveData.quizAnswers = {};
     if(!saveData.quizAnswers[cid]) saveData.quizAnswers[cid] = {};
     var answers = saveData.quizAnswers[cid] || {};
+    
     var html = '<div style="margin-bottom:12px;color:var(--police-green);font-weight:bold;">✅ 所有线索已集齐！请回答以下问题完成结案：</div>';
     c.quiz.forEach(function(q, idx){
         html += '<div style="margin:16px 0;padding:14px;background:#f8fafc;border-radius:6px;"><div style="font-weight:bold;margin-bottom:8px;">'+(idx+1)+'. '+q.q+'</div>';
@@ -1007,7 +1058,7 @@ function renderReport() {
     updateProgress();
 }
 
-// ========== 新增：线索总览模块 ==========
+// ========== 线索总览模块 ==========
 function renderOverview() {
     var container = document.getElementById('clueOverviewContainer');
     var html = '';
